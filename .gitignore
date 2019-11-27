@@ -37,3 +37,5 @@ bin
 *.bak
 /log/
 /genius-9.1.11/
+
+etc/
