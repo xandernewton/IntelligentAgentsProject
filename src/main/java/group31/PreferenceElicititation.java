@@ -1,4 +1,4 @@
-package group31;
+package main.java.group31;
 
 public class PreferenceElicititation {
 }

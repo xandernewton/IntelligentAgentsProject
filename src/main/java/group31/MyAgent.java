@@ -1,4 +1,4 @@
-package group31;
+package main.java.group31;
 
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
@@ -19,7 +19,8 @@ import genius.core.uncertainty.BidRanking;
 import genius.core.utility.AbstractUtilitySpace;
 import genius.core.utility.UtilitySpace;
 import genius.core.utility.AdditiveUtilitySpace;
-import group31.OfferStrategy;
+import main.java.group31.OfferStrategy;
+import org.chocosolver.solver.Model;
 
 /**
  * A simple example agent that makes random bids above a minimum target utility. 
@@ -44,13 +45,28 @@ public class MyAgent extends AbstractNegotiationParty
 		if (hasPreferenceUncertainty()) {
 			System.out.println("Preference uncertainty is enabled.");
 		}
+		// Just to check that Preference Uncertainty is enabled
+
+
+		Model model = new Model("my first problem");
+
+		// This is for you KAI ^^^^^^ just to test that loading the constraint stuff work
+
+
 		BidRanking bidRanking = userModel.getBidRanking();
 		Domain domain = this.userModel.getDomain();
 		// Setup essential variables
 
 		estimatedUtilitySpace = (AdditiveUtilitySpace) estimateUtilitySpace();
 		OfferStrategy acceptOfferStrategy = new OfferStrategy(estimatedUtilitySpace, domain);
+		// Get estimated utility space until Kai has finished his code
+
 		acceptOfferStrategy.computeAllPossibleBids();
+		// Create new acceptOfferStrategy object and compute all the possible bids
+
+
+
+
 	}
 
 

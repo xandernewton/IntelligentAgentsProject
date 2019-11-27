@@ -1,4 +1,4 @@
-package group31;
+package main.java.group31;
 
 import agents.anac.y2010.Yushu.Utility;
 import com.google.common.collect.Sets;
