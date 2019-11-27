@@ -24,7 +24,7 @@ import org.chocosolver.solver.Model;
 /**
  * A simple example agent that makes random bids above a minimum target utility. 
  *
- * @author Tim Baarslag
+ * @author Alex Newton
  */
 public class MyAgent extends AbstractNegotiationParty
 {
@@ -32,6 +32,8 @@ public class MyAgent extends AbstractNegotiationParty
 	private Bid lastOffer;
 	private AdditiveUtilitySpace estimatedUtilitySpace;
 	private Timeline timeLine  = (Timeline) getTimeLine();
+	private OfferStrategy offerStrategy;
+	private Double discountFactor;
 
 
 	/**
@@ -55,17 +57,12 @@ public class MyAgent extends AbstractNegotiationParty
 
 		BidRanking bidRanking = userModel.getBidRanking();
 		Domain domain = this.userModel.getDomain();
+		discountFactor = utilitySpace.getDiscountFactor();
 		// Setup essential variables
 
 		estimatedUtilitySpace = (AdditiveUtilitySpace) estimateUtilitySpace();
 		OfferStrategy acceptOfferStrategy = new OfferStrategy(estimatedUtilitySpace, domain, timeLine);
 		// Get estimated utility space until Kai has finished his code
-
-		acceptOfferStrategy.computeAllPossibleBids();
-		// Create new acceptOfferStrategy object and compute all the possible bids
-
-
-
 
 	}
 
@@ -85,24 +82,13 @@ public class MyAgent extends AbstractNegotiationParty
 				else
 					return new EndNegotiation(getPartyId());
 		
-		// Otherwise, send out a random offer above the target utility 
-		return new Offer(getPartyId(), generateRandomBidAboveTarget());
+		// Otherwise, get a bid from the offer strategy function
+
+		Bid BidToOffer = offerStrategy.getBid();
+		Offer OfferToSend = new Offer(getPartyId(), BidToOffer);
+		return OfferToSend;
 	}
 
-	private Bid generateRandomBidAboveTarget() 
-	{
-		Bid randomBid;
-		double util;
-		int i = 0;
-		// try 100 times to find a bid under the target utility
-		do 
-		{
-			randomBid = generateRandomBid();
-			util = utilitySpace.getUtility(randomBid);
-		} 
-		while (util < MINIMUM_TARGET && i++ < 100);		
-		return randomBid;
-	}
 
 	/**
 	 * Remembers the offers received by the opponent.

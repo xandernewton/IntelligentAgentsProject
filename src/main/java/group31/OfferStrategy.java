@@ -1,6 +1,5 @@
 package main.java.group31;
 
-import agents.anac.y2010.Yushu.Utility;
 import com.google.common.collect.Sets;
 import genius.core.Bid;
 import genius.core.Domain;
@@ -10,7 +9,6 @@ import genius.core.issue.Value;
 import genius.core.issue.ValueDiscrete;
 import genius.core.timeline.Timeline;
 import genius.core.utility.AdditiveUtilitySpace;
-import genius.core.parties.AbstractNegotiationParty;
 import org.javatuples.Pair;
 
 
@@ -18,23 +16,46 @@ import java.util.*;
 
 class OfferStrategy {
 
-    protected AdditiveUtilitySpace utilitySpace;
+    private AdditiveUtilitySpace utilitySpace;
     private TreeMap<Double, Bid> allPossibleBids = new TreeMap<Double, Bid>();
     private HashMap<Integer,Integer> mapIssue =  new  HashMap<Integer, Integer>();
     private HashMap<Integer, Issue> issueMap = new HashMap<Integer, Issue>();
     private List<Set<Pair<Integer,ValueDiscrete>>> interimList = new ArrayList<Set<Pair<Integer, ValueDiscrete>>>();
     private Domain domain;
     private Timeline timeLine;
-    private Double startPrice = 0.4; // this needs testing for the optimal value
+    private Double initialConcession = 0.4; // this needs testing for the optimal value
+    private Double e = 0.02; // from the paper
+    private Double minUtility = 0.58; // from the paper
+    private Double maxUtility;
+    private Double discountFactor;
+    private Double discountRateCoefficient = 0.05;
+
+    public TreeMap<Double, Bid> getAllPossibleBids() {
+        return allPossibleBids;
+    }
+
+
 
     OfferStrategy(AdditiveUtilitySpace utilitySpace, Domain domain, Timeline timeLine) {
 
         this.utilitySpace = utilitySpace;
         this.domain = domain;
         this.timeLine = timeLine;
+        this.discountFactor = utilitySpace.getDiscountFactor();
+
+        try {
+            Bid MaxUtilityBid = utilitySpace.getMaxUtilityBid();
+            maxUtility =  utilitySpace.getUtility(MaxUtilityBid);
+        }
+        catch (Exception x) {
+            x.printStackTrace();
+        }
+
+        computeAllPossibleBids();
+        // Create new acceptOfferStrategy object and compute all the possible bids
     }
 
-    void computeAllPossibleBids(){
+    private void computeAllPossibleBids(){
 
 
         // A list containing sets of values for each issue
@@ -78,29 +99,35 @@ class OfferStrategy {
     }
 
 
-    private Double concessionFunction(Double time){
+    public Bid getBid(){
 
-        Double conecessionLimit =  this.startPrice + (1- this.startPrice)*Math.pow(time/1.00D, 1.0D/Math.E) ;
-        return conecessionLimit;
+        Double currentUtility = CalculateUtilityToOffer();
+        Bid bidToOffer = allPossibleBids.get(currentUtility);
+        return bidToOffer;
 
     }
 
-    private void CalculateUtilityToOffer(Double time){
 
-        Double conecessionLimit = concessionFunction(time);
+    private Double concessionFunction(Double time){
 
-        try {
-            Bid MaxUtilityBid = utilitySpace.getMaxUtilityBid();
-            Double maxUtility =  utilitySpace.getUtility(MaxUtilityBid);
+        Double conecessionLimit =  this.initialConcession + (1- this.initialConcession)*Math.pow(time/1.00D, 1.0D/discountRateCoefficient) ;
+        return conecessionLimit = 0.0;
 
-            //Bid MinUtilityBid = utilitySpace.getMinUtilityBid();
-            //Double minUtility =  utilitySpace.getUtility(MaxUtilityBid);
-            Double minUtility = 0.58; // from the paper
+    }
 
+    private Double CalculateUtilityToOffer(){
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Double currentTime = timeLine.getCurrentTime();
+        Double conecessionLimit = concessionFunction(currentTime);
+        Double dynamicMinUtility = calculateDynamicMinUtility();
+        Double currentUtility = 0.0;
+        currentUtility = dynamicMinUtility + (1- conecessionLimit) * (maxUtility - dynamicMinUtility);
+        return currentUtility;
+    }
+
+    private Double calculateDynamicMinUtility(){
+
+        return  (maxUtility - minUtility) * discountFactor + minUtility;
 
     }
 
