@@ -8,10 +8,9 @@ import genius.core.issue.Issue;
 import genius.core.issue.IssueDiscrete;
 import genius.core.issue.Value;
 import genius.core.issue.ValueDiscrete;
-import genius.core.uncertainty.AdditiveUtilitySpaceFactory;
-import genius.core.utility.AbstractUtilitySpace;
+import genius.core.timeline.Timeline;
 import genius.core.utility.AdditiveUtilitySpace;
-import genius.core.utility.UtilitySpace;
+import genius.core.parties.AbstractNegotiationParty;
 import org.javatuples.Pair;
 
 
@@ -25,11 +24,14 @@ class OfferStrategy {
     private HashMap<Integer, Issue> issueMap = new HashMap<Integer, Issue>();
     private List<Set<Pair<Integer,ValueDiscrete>>> interimList = new ArrayList<Set<Pair<Integer, ValueDiscrete>>>();
     private Domain domain;
+    private Timeline timeLine;
+    private Double startPrice = 0.4; // this needs testing for the optimal value
 
-    OfferStrategy(AdditiveUtilitySpace utilitySpace, Domain domain) {
+    OfferStrategy(AdditiveUtilitySpace utilitySpace, Domain domain, Timeline timeLine) {
 
         this.utilitySpace = utilitySpace;
         this.domain = domain;
+        this.timeLine = timeLine;
     }
 
     void computeAllPossibleBids(){
@@ -74,6 +76,34 @@ class OfferStrategy {
 
         return newBid;
     }
+
+
+    private Double concessionFunction(Double time){
+
+        Double conecessionLimit =  this.startPrice + (1- this.startPrice)*Math.pow(time/1.00D, 1.0D/Math.E) ;
+        return conecessionLimit;
+
+    }
+
+    private void CalculateUtilityToOffer(Double time){
+
+        Double conecessionLimit = concessionFunction(time);
+
+        try {
+            Bid MaxUtilityBid = utilitySpace.getMaxUtilityBid();
+            Double maxUtility =  utilitySpace.getUtility(MaxUtilityBid);
+
+            //Bid MinUtilityBid = utilitySpace.getMinUtilityBid();
+            //Double minUtility =  utilitySpace.getUtility(MaxUtilityBid);
+            Double minUtility = 0.58; // from the paper
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
 
 }

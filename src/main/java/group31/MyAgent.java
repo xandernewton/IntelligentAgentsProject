@@ -14,10 +14,9 @@ import genius.core.actions.EndNegotiation;
 import genius.core.actions.Offer;
 import genius.core.parties.AbstractNegotiationParty;
 import genius.core.parties.NegotiationInfo;
-import genius.core.uncertainty.AdditiveUtilitySpaceFactory;
+import genius.core.timeline.Timeline;
 import genius.core.uncertainty.BidRanking;
 import genius.core.utility.AbstractUtilitySpace;
-import genius.core.utility.UtilitySpace;
 import genius.core.utility.AdditiveUtilitySpace;
 import main.java.group31.OfferStrategy;
 import org.chocosolver.solver.Model;
@@ -32,6 +31,7 @@ public class MyAgent extends AbstractNegotiationParty
 	private static double MINIMUM_TARGET = 0.8;
 	private Bid lastOffer;
 	private AdditiveUtilitySpace estimatedUtilitySpace;
+	private Timeline timeLine  = (Timeline) getTimeLine();
 
 
 	/**
@@ -58,7 +58,7 @@ public class MyAgent extends AbstractNegotiationParty
 		// Setup essential variables
 
 		estimatedUtilitySpace = (AdditiveUtilitySpace) estimateUtilitySpace();
-		OfferStrategy acceptOfferStrategy = new OfferStrategy(estimatedUtilitySpace, domain);
+		OfferStrategy acceptOfferStrategy = new OfferStrategy(estimatedUtilitySpace, domain, timeLine);
 		// Get estimated utility space until Kai has finished his code
 
 		acceptOfferStrategy.computeAllPossibleBids();
