@@ -14,7 +14,7 @@ import org.javatuples.Pair;
 
 import java.util.*;
 
-class OfferStrategy {
+class BidGenerator {
 
     private AdditiveUtilitySpace utilitySpace;
     private TreeMap<Double, Bid> allPossibleBids = new TreeMap<Double, Bid>();
@@ -23,12 +23,11 @@ class OfferStrategy {
     private List<Set<Pair<Integer,ValueDiscrete>>> interimList = new ArrayList<Set<Pair<Integer, ValueDiscrete>>>();
     private Domain domain;
     private Timeline timeLine;
-    private Double initialConcession = 0.4; // this needs testing for the optimal value
-    private Double e = 0.02; // from the paper
-    private Double minUtility = 0.58; // from the paper
+    private Double initialConcession = 0.05D; // this needs testing for the optimal value
+    private Double minUtility = 0.58D; // from the paper
     private Double maxUtility;
     private Double discountFactor;
-    private Double discountRateCoefficient = 0.05;
+    private Double concessionRateCoefficient = 0.02D;
 
     public TreeMap<Double, Bid> getAllPossibleBids() {
         return allPossibleBids;
@@ -36,7 +35,7 @@ class OfferStrategy {
 
 
 
-    OfferStrategy(AdditiveUtilitySpace utilitySpace, Domain domain, Timeline timeLine) {
+    BidGenerator(AdditiveUtilitySpace utilitySpace, Domain domain, Timeline timeLine) {
 
         this.utilitySpace = utilitySpace;
         this.domain = domain;
@@ -51,8 +50,7 @@ class OfferStrategy {
             x.printStackTrace();
         }
 
-        computeAllPossibleBids();
-        // Create new acceptOfferStrategy object and compute all the possible bids
+        computeAllPossibleBids();        // Create new acceptOfferStrategy object and compute all the possible bids
     }
 
     private void computeAllPossibleBids(){
@@ -93,7 +91,7 @@ class OfferStrategy {
         }
 
         Bid newBid = new Bid(this.domain,valueMap);
-        System.out.println("test");
+        //System.out.println("test");
 
         return newBid;
     }
@@ -101,8 +99,11 @@ class OfferStrategy {
 
     public Bid getBid(){
 
-        Double currentUtility = CalculateUtilityToOffer();
-        Bid bidToOffer = allPossibleBids.get(currentUtility);
+        Double currentUtility = this.CalculateUtilityToOffer();
+        System.out.println(currentUtility);
+        Map.Entry utilityOfLowestBid = allPossibleBids.lowerEntry(currentUtility);
+        // Finds mapping pair with the greatest key strictly less than the current utility
+        Bid bidToOffer = (Bid) utilityOfLowestBid.getValue();
         return bidToOffer;
 
     }
@@ -110,8 +111,12 @@ class OfferStrategy {
 
     private Double concessionFunction(Double time){
 
-        Double conecessionLimit =  this.initialConcession + (1- this.initialConcession)*Math.pow(time/1.00D, 1.0D/discountRateCoefficient) ;
-        return conecessionLimit = 0.0;
+        /**
+         * Need to add code to change the concessionRateCoefficient
+         */
+
+        Double conecessionLimit =  this.initialConcession + (1- this.initialConcession)*Math.pow(time/discountFactor, 1.0D/ concessionRateCoefficient) ;
+        return conecessionLimit;
 
     }
 

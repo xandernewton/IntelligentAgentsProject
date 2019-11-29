@@ -18,7 +18,6 @@ import genius.core.timeline.Timeline;
 import genius.core.uncertainty.BidRanking;
 import genius.core.utility.AbstractUtilitySpace;
 import genius.core.utility.AdditiveUtilitySpace;
-import main.java.group31.OfferStrategy;
 import org.chocosolver.solver.Model;
 
 /**
@@ -32,8 +31,9 @@ public class MyAgent extends AbstractNegotiationParty
 	private Bid lastOffer;
 	private AdditiveUtilitySpace estimatedUtilitySpace;
 	private Timeline timeLine  = (Timeline) getTimeLine();
-	private OfferStrategy offerStrategy;
+	private BidGenerator bidGenerator;
 	private Double discountFactor;
+	private Integer round;
 
 
 	/**
@@ -58,10 +58,11 @@ public class MyAgent extends AbstractNegotiationParty
 		BidRanking bidRanking = userModel.getBidRanking();
 		Domain domain = this.userModel.getDomain();
 		discountFactor = utilitySpace.getDiscountFactor();
+		timeLine = (Timeline) getTimeLine();
 		// Setup essential variables
 
 		estimatedUtilitySpace = (AdditiveUtilitySpace) estimateUtilitySpace();
-		OfferStrategy acceptOfferStrategy = new OfferStrategy(estimatedUtilitySpace, domain, timeLine);
+		this.bidGenerator = new BidGenerator(estimatedUtilitySpace, domain, timeLine);
 		// Get estimated utility space until Kai has finished his code
 
 	}
@@ -84,7 +85,7 @@ public class MyAgent extends AbstractNegotiationParty
 		
 		// Otherwise, get a bid from the offer strategy function
 
-		Bid BidToOffer = offerStrategy.getBid();
+		Bid BidToOffer = bidGenerator.getBid();
 		Offer OfferToSend = new Offer(getPartyId(), BidToOffer);
 		return OfferToSend;
 	}
