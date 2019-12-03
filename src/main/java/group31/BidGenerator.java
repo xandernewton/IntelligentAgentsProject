@@ -40,7 +40,6 @@ class BidGenerator {
         this.utilitySpace = utilitySpace;
         this.domain = domain;
         this.timeLine = timeLine;
-        this.discountFactor = utilitySpace.getDiscountFactor();
 
         try {
             Bid MaxUtilityBid = utilitySpace.getMaxUtilityBid();
@@ -99,11 +98,16 @@ class BidGenerator {
 
     public Bid getBid(){
 
+        Bid bidToOffer = null;
         Double currentUtility = this.CalculateUtilityToOffer();
         System.out.println(currentUtility);
         Map.Entry utilityOfLowestBid = allPossibleBids.lowerEntry(currentUtility);
         // Finds mapping pair with the greatest key strictly less than the current utility
-        Bid bidToOffer = (Bid) utilityOfLowestBid.getValue();
+        try{
+            bidToOffer = (Bid) utilityOfLowestBid.getValue();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         return bidToOffer;
 
     }
@@ -115,25 +119,25 @@ class BidGenerator {
          * Need to add code to change the concessionRateCoefficient
          */
 
-        Double conecessionLimit =  this.initialConcession + (1- this.initialConcession)*Math.pow(time/discountFactor, 1.0D/ concessionRateCoefficient) ;
+        Double conecessionLimit =  this.initialConcession + (1.00D- this.initialConcession)*Math.pow(Math.min(time,1.00D)/discountFactor, 1.0D/ concessionRateCoefficient) ;
+        if(conecessionLimit > 1.00D){
+            System.out.println("aaah shit");
+        }
         return conecessionLimit;
 
     }
 
-    private Double CalculateUtilityToOffer(){
+    public Double CalculateUtilityToOffer(){
 
         Double currentTime = timeLine.getCurrentTime();
         Double conecessionLimit = concessionFunction(currentTime);
-        Double dynamicMinUtility = calculateDynamicMinUtility();
         Double currentUtility = 0.0;
-        currentUtility = dynamicMinUtility + (1- conecessionLimit) * (maxUtility - dynamicMinUtility);
+        currentUtility = minUtility + (1.00D- conecessionLimit) * (maxUtility - minUtility);
+        if (Math.signum(currentUtility) == -1.00){
+            System.out.println("aahh shit");
+        }
+
         return currentUtility;
-    }
-
-    private Double calculateDynamicMinUtility(){
-
-        return  (maxUtility - minUtility) * discountFactor + minUtility;
-
     }
 
 
