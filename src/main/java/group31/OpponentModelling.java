@@ -2,6 +2,7 @@ package main.java.group31;
 
 import genius.core.Bid;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class OpponentModelling {

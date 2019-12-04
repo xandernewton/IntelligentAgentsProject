@@ -76,7 +76,7 @@ class BidGenerator {
             Double utilityOfBid = this.utilitySpace.getUtility(bidToAddToTree);
             this.allPossibleBids.put(utilityOfBid, bidToAddToTree);
         }
-        System.out.println("test");
+
 
     }
 
@@ -100,7 +100,6 @@ class BidGenerator {
 
         Bid bidToOffer = null;
         Double currentUtility = this.CalculateUtilityToOffer();
-        System.out.println(currentUtility);
         Map.Entry utilityOfLowestBid = allPossibleBids.lowerEntry(currentUtility);
         // Finds mapping pair with the greatest key strictly less than the current utility
         try{
@@ -114,10 +113,6 @@ class BidGenerator {
 
 
     private Double concessionFunction(Double time){
-
-        /**
-         * Need to add code to change the concessionRateCoefficient
-         */
 
         Double conecessionLimit =  this.initialConcession + (1.00D- this.initialConcession)*Math.pow(Math.min(time,1.00D)/discountFactor, 1.0D/ concessionRateCoefficient) ;
         if(conecessionLimit > 1.00D){

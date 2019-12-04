@@ -13,6 +13,9 @@ import genius.core.actions.Accept;
 import genius.core.actions.Action;
 import genius.core.actions.EndNegotiation;
 import genius.core.actions.Offer;
+import genius.core.issue.Issue;
+import genius.core.issue.Value;
+import genius.core.issue.ValueDiscrete;
 import genius.core.parties.AbstractNegotiationParty;
 import genius.core.parties.NegotiationInfo;
 import genius.core.timeline.Timeline;
@@ -72,7 +75,6 @@ public class MyAgent extends AbstractNegotiationParty {
 		discountFactor = utilitySpace.getDiscountFactor();
 		timeLine = (Timeline) getTimeLine();
 		firstRound = true;
-		opponentModel = new OpponentModelling();
 		// Setup essential variables
 
 		estimatedUtilitySpace = (AdditiveUtilitySpace) estimateUtilitySpace();
@@ -111,7 +113,9 @@ public class MyAgent extends AbstractNegotiationParty {
 	 */
 	@Override
 	public void receiveMessage(AgentID sender, Action action) {
-		if (action instanceof Offer) {
+		if (action instanceof Offer)
+		{
+
 			lastOffer = ((Offer) action).getBid();
 		}
 	}

@@ -7,6 +7,9 @@ import genius.core.actions.Accept;
 import genius.core.actions.Action;
 import genius.core.actions.EndNegotiation;
 import genius.core.actions.Offer;
+import genius.core.issue.Issue;
+import genius.core.issue.Value;
+import genius.core.issue.ValueDiscrete;
 import genius.core.parties.AbstractNegotiationParty;
 import genius.core.parties.NegotiationInfo;
 import genius.core.timeline.Timeline;
@@ -32,6 +35,7 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 	private Timeline timeLine = (Timeline) getTimeLine();
 	private BidGenerator bidGenerator;
 	private OpponentModelling opponentModel;
+	private OpponentModelling_JB opponentModel_2;
 	private Double discountFactor;
 	private Integer round;
 	private ArrayList<Map.Entry<Double, Bid>> mybidHistory = new ArrayList<Map.Entry<Double, Bid>>();
@@ -81,6 +85,9 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 		this.allBids = bidGenerator.getAllPossibleBids();
 		// get all the possible bids in the domain
 
+		opponentModel_2 = new OpponentModelling_JB(estimatedUtilitySpace);
+		//ignore this line, its for testing
+
 	}
 
 	/**
@@ -96,15 +103,17 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 		Map.Entry<Double, Bid>  comparisonHighestBid;
 		ArrayList<Map.Entry<Double,Bid>> sortingArray = new ArrayList<>();
 		Double opponentLastBidUtility;
+		Object actionTaken = null;
 		// calculate the current
 
 		if (firstRound) {
 			Map.Entry<Double, Bid> highestValuedBidEntry = allBids.lastEntry();
 			offerQueue.add(highestValuedBidEntry);
 			this.firstRound = false;
+			// on first round, offer our best bid
 		} else if (offerQueue.isEmpty()) {
 			TreeMap<Double, Bid> potentialBids = new TreeMap<Double, Bid>();
-			Map.Entry<Double, Bid> nextHighestBid =  allBids.lowerEntry((Double) mybidHistory.get(mybidHistory.size() - 1).getKey());
+			Map.Entry<Double, Bid> nextHighestBid =  allBids.lowerEntry(mybidHistory.get(mybidHistory.size() - 1).getKey());
 			Double lastBidUtil = (Double) nextHighestBid.getKey();
 			potentialBids.put(nextHighestBid.getKey(), nextHighestBid.getValue());
 			if (lastBidUtil < utilityThreshold) {
@@ -117,11 +126,11 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 			}
 
 			while(!difference){
-				comparisonHighestBid = allBids.lowerEntry((Double) nextHighestBid.getKey());
-				if((Double) comparisonHighestBid.getKey() > utilityThreshold){
+				comparisonHighestBid = allBids.lowerEntry(nextHighestBid.getKey());
+				if(comparisonHighestBid.getKey() > utilityThreshold){
 					potentialBids.put(comparisonHighestBid.getKey(), comparisonHighestBid.getValue());
 				}
-				if((Double) comparisonHighestBid.getKey() - (Double) nextHighestBid.getKey() < 0.01D)
+				if(comparisonHighestBid.getKey() - nextHighestBid.getKey() < 0.01D)
 					difference = true;
 					// if there is a minimal difference between the current and last bid, stop
 
@@ -132,6 +141,7 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 			if(potentialBids.size() < 4){
 				offerQueue.addAll(potentialBids.entrySet());
 			}
+			// add bids to the offer queue
 			else{
 				sortingArray.addAll(potentialBids.entrySet());
 				sortingArray.sort((bid1, bid2) -> {
@@ -146,41 +156,33 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 					offerQueue.add(sortingArray.get(x));
 				}
 				// add the top 4 bids to the offer queue
-				if(opponentModel.opponentBestEntry.getKey() > offerQueue.getFirst().getKey()){
+				if(opponentModel.opponentBestEntry.getKey() > offerQueue.getFirst().getKey()) {
 					offerQueue.add(opponentModel.opponentBestEntry);
 				}
-
-
 			}
 
 		}
 
-		opponentLastBidUtility = this.utilitySpace.getUtility(opponentModel.opponentLastBid);
-		if(opponentLastBidUtility > lowestUtility ||
-				opponentLastBidUtility >= this.utilitySpace.getUtility(offerQueue.getFirst().getValue())){
-			return new Accept(getPartyId(), opponentModel.opponentLastBid);
-		}
-		else{
-			Map.Entry<Double, Bid> removedBid = offerQueue.remove(0);
-			mybidHistory.add(removedBid);
-			if(removedBid.getKey() < lowestUtility){
-				lowestUtility = removedBid.getKey();
+		if (opponentModel.opponentLastBid != null) {
+			opponentLastBidUtility = this.utilitySpace.getUtility(opponentModel.opponentLastBid);
+			if (opponentLastBidUtility > lowestUtility ||
+					opponentLastBidUtility >= this.utilitySpace.getUtility(offerQueue.getFirst().getValue())) {
+				actionTaken =  new Accept(getPartyId(), opponentModel.opponentLastBid);
+				// If opponents last bid is greater than best bid on offer queue - accept
+				// If opponents last bid is greater than best lowest seen bid - accept
+			} else {
+				Map.Entry<Double, Bid> removedBid = offerQueue.remove(0);
+				mybidHistory.add(removedBid);
+				if (removedBid.getKey() < lowestUtility) {
+					lowestUtility = removedBid.getKey();
+					// update lowest bid
+				}
+				actionTaken = new Offer(getPartyId(), removedBid.getValue());
+				//
 			}
 		}
 
-		// Check for acceptance if we have received an offer
-		if (lastOffer != null)
-			if (timeline.getTime() >= 0.99)
-				if (getUtility(lastOffer) >= utilitySpace.getReservationValue())
-					return new Accept(getPartyId(), lastOffer);
-				else
-					return new EndNegotiation(getPartyId());
-
-		// Otherwise, get a bid from the offer strategy function
-
-		Bid BidToOffer = bidGenerator.getBid();
-		Offer OfferToSend = new Offer(getPartyId(), BidToOffer);
-		return OfferToSend;
+		return (Action) actionTaken;
 	}
 
 	/**
@@ -188,8 +190,20 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 	 */
 	@Override
 	public void receiveMessage(AgentID sender, Action action) {
-		if (action instanceof Offer) {
+		if (action instanceof Offer)
+		{
+			List<Issue> issues;
 			lastOffer = ((Offer) action).getBid();
+			issues = lastOffer.getIssues();
+			for(Issue issue : issues){
+				Value value = lastOffer.getValue(issue);
+				opponentModel_2.updateFrequency(issue, (ValueDiscrete) value);
+
+			}
+			opponentModel_2.updateOpponentModel();
+			opponentModel_2.getOpponentUtility(lastOffer);
+
+
 		}
 	}
 

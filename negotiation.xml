@@ -14,7 +14,7 @@
                 <party classPath="main.java.group31.MyAgent">
                     <properties />
                 </party>
-                <party classPath="negotiator.parties.ConcederNegotiationParty">
+                <party classPath="agents.TimeDependentAgentLinear">
                     <properties />
                 </party>
             </partyRepItems>
