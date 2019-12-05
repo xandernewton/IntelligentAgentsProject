@@ -5,7 +5,6 @@ import genius.core.Bid;
 import genius.core.Domain;
 import genius.core.actions.Accept;
 import genius.core.actions.Action;
-import genius.core.actions.EndNegotiation;
 import genius.core.actions.Offer;
 import genius.core.issue.Issue;
 import genius.core.issue.Value;
@@ -35,7 +34,6 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 	private Timeline timeLine = (Timeline) getTimeLine();
 	private BidGenerator bidGenerator;
 	private OpponentModelling opponentModel;
-	private OpponentModelling_JB opponentModel_2;
 	private Double discountFactor;
 	private Integer round;
 	private ArrayList<Map.Entry<Double, Bid>> mybidHistory = new ArrayList<Map.Entry<Double, Bid>>();
@@ -75,7 +73,6 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 		discountFactor = utilitySpace.getDiscountFactor();
 		timeLine = (Timeline) getTimeLine();
 		firstRound = true;
-		opponentModel = new OpponentModelling();
 		// Setup essential variables
 
 		estimatedUtilitySpace = (AdditiveUtilitySpace) estimateUtilitySpace();
@@ -85,7 +82,7 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 		this.allBids = bidGenerator.getAllPossibleBids();
 		// get all the possible bids in the domain
 
-		opponentModel_2 = new OpponentModelling_JB(estimatedUtilitySpace);
+		opponentModel = new OpponentModelling(estimatedUtilitySpace);
 		//ignore this line, its for testing
 
 	}
@@ -197,11 +194,11 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 			issues = lastOffer.getIssues();
 			for(Issue issue : issues){
 				Value value = lastOffer.getValue(issue);
-				opponentModel_2.updateFrequency(issue, (ValueDiscrete) value);
+				opponentModel.updateFrequency(issue, (ValueDiscrete) value);
 
 			}
-			opponentModel_2.updateOpponentModel();
-			opponentModel_2.getOpponentUtility(lastOffer);
+			opponentModel.updateOpponentModel();
+			opponentModel.getOpponentUtility(lastOffer);
 
 
 		}

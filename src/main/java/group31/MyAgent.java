@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.*;
 
-import com.sun.xml.bind.v2.runtime.unmarshaller.XsiNilLoader;
 import genius.core.AgentID;
 import genius.core.Bid;
 import genius.core.Domain;
@@ -23,6 +22,7 @@ import genius.core.uncertainty.BidRanking;
 import genius.core.utility.AbstractUtilitySpace;
 import genius.core.utility.AdditiveUtilitySpace;
 import org.chocosolver.solver.Model;
+import main.java.group31.OpponentModelling;
 
 /**
  * A simple example agent that makes random bids above a minimum target utility.
@@ -84,6 +84,8 @@ public class MyAgent extends AbstractNegotiationParty {
 		this.allBids = bidGenerator.getAllPossibleBids();
 		// get all the possible bids in the domain
 
+		this.opponentModel = new OpponentModelling(estimatedUtilitySpace);
+
 	}
 
 	/**
@@ -115,8 +117,18 @@ public class MyAgent extends AbstractNegotiationParty {
 	public void receiveMessage(AgentID sender, Action action) {
 		if (action instanceof Offer)
 		{
-
+			List<Issue> issues;
 			lastOffer = ((Offer) action).getBid();
+			issues = lastOffer.getIssues();
+			for(Issue issue : issues){
+				Value value = lastOffer.getValue(issue);
+				opponentModel.updateFrequency(issue, (ValueDiscrete) value);
+
+			}
+			opponentModel.updateOpponentModel();
+			opponentModel.getOpponentUtility(lastOffer);
+
+
 		}
 	}
 

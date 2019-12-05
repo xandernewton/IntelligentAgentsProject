@@ -49,7 +49,8 @@ class BidGenerator {
             x.printStackTrace();
         }
 
-        computeAllPossibleBids();        // Create new acceptOfferStrategy object and compute all the possible bids
+        computeAllPossibleBids();
+        // Create new acceptOfferStrategy object and compute all the possible bids
     }
 
     private void computeAllPossibleBids(){
