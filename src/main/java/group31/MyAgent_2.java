@@ -225,7 +225,7 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 			issues = lastOffer.getIssues();
 			for(Issue issue : issues){
 				Value value = lastOffer.getValue(issue);
-				opponentModel.updateFrequency(issue, (ValueDiscrete) value);
+				opponentModel.updateFrequency(issue, (ValueDiscrete) value, timeLine.getTime());
 
 			}
 			opponentModel.updateOpponentModel(lastOffer);

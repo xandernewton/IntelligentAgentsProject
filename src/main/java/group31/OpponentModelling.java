@@ -16,7 +16,7 @@ import java.util.*;
  */
 public class OpponentModelling {
 
-    public Double epsilon = 0.2;
+    public Double epsilon = 0.01;
     public AbstractMap.SimpleEntry<Double, Bid> opponentBestEntry;
     public ArrayList<AbstractMap.SimpleEntry<Double, Bid>> opponentBidHistory = new ArrayList<AbstractMap.SimpleEntry<Double, Bid>>();
     public AbstractMap.SimpleEntry<Double, Bid> opponentLastBid;
@@ -87,7 +87,8 @@ public class OpponentModelling {
     }
 
 
-    public void updateFrequency(Issue issue, ValueDiscrete valueDiscrete) {
+    public void updateFrequency(Issue issue, ValueDiscrete valueDiscrete, double Time) {
+        epsilon = Time;
         Pair<Integer, Integer> indexes = getIndex(issue, valueDiscrete);
         Integer issueIndex = indexes.getValue0();
         Integer optionIndex = indexes.getValue1();
