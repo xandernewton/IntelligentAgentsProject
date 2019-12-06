@@ -16,13 +16,14 @@ import java.util.*;
  */
 public class OpponentModelling {
 
+    public Double epsilon = 0.2;
     public AbstractMap.SimpleEntry<Double, Bid> opponentBestEntry;
     public ArrayList<AbstractMap.SimpleEntry<Double, Bid>> opponentBidHistory = new ArrayList<AbstractMap.SimpleEntry<Double, Bid>>();
     public AbstractMap.SimpleEntry<Double, Bid> opponentLastBid;
     public Integer numberOfBids = 0;
     private AdditiveUtilitySpace utilitySpace;
     private Integer[][] frequency;
-    private Double[][] orderValues;
+    private Double[][] opValues;
     private HashMap<Integer, Integer> mapIssue = new HashMap<Integer, Integer>();
     // maps each issue number to 0,1,2 etc so they can be used to index an array
     private HashMap<String, Integer> mapOptions = new HashMap<>();
@@ -73,7 +74,7 @@ public class OpponentModelling {
         for (Map.Entry<Integer, Value> entry : values.entrySet()) {
             currentIndexes = getIndex(intToIssues.get(entry.getKey()), (ValueDiscrete) entry.getValue());
             currentWeight = issueAndWeights.get(currentIndexes.getValue0());
-            optionValue = orderValues[currentIndexes.getValue0()][currentIndexes.getValue1()];
+            optionValue = opValues[currentIndexes.getValue0()][currentIndexes.getValue1()];
             utility = utility + currentWeight * optionValue;
 
         }
@@ -87,14 +88,15 @@ public class OpponentModelling {
 
 
     public void updateFrequency(Issue issue, ValueDiscrete valueDiscrete) {
-
         Pair<Integer, Integer> indexes = getIndex(issue, valueDiscrete);
         Integer issueIndex = indexes.getValue0();
         Integer optionIndex = indexes.getValue1();
-        frequency[issueIndex][optionIndex] = frequency[issueIndex][optionIndex] + 1;
-
-        // add stuff here
-
+        opValues[issueIndex][optionIndex] = opValues[issueIndex][optionIndex] + epsilon;
+        double total = 0.0;
+        for (int i = 0; i < opValues[issueIndex].length ; i++) {
+            total+= opValues[issueIndex][i];
+        }
+        opValues[issueIndex][optionIndex] = opValues[issueIndex][optionIndex]/total;
         // increments the value a for the specific issue and its corresponding value
     }
 
@@ -118,7 +120,7 @@ public class OpponentModelling {
         int issue_counter = 0;
         frequency = new Integer[issues.size()][];
         // the frequency of each option in each value
-        orderValues = new Double[issues.size()][];
+        opValues = new Double[issues.size()][];
         // the utility of each option for in each issue
 
         for (Issue issue : issues) {
@@ -133,13 +135,13 @@ public class OpponentModelling {
             // Add array to the issue list which is the length of the number of options
 
             frequency[mapIssue.get(issue.getNumber())] = new Integer[issueDiscrete.getValues().size()];
-            orderValues[mapIssue.get(issue.getNumber())] = new Double[issueDiscrete.getValues().size()];
+            opValues[mapIssue.get(issue.getNumber())] = new Double[issueDiscrete.getValues().size()];
             // add new arrays in the nested array
 
             // Initialise all entries in the list to zero
 
             Arrays.fill(frequency[mapIssue.get(issue.getNumber())], 0);
-            Arrays.fill(orderValues[mapIssue.get(issue.getNumber())], 0.0D);
+            Arrays.fill(opValues[mapIssue.get(issue.getNumber())], 0.0D);
             // fill with zeros
 
             for (ValueDiscrete valueDiscrete : issueDiscrete.getValues()) {
@@ -164,12 +166,15 @@ public class OpponentModelling {
         int index = 0;
         for (Issue issue : issues) {
             calculatedWeight = calculateWeightForIssue(issue);
+            if (calculatedWeight<0.000001){//initialise to a small number to mitigate NANs
+                calculatedWeight=0.000001;
+            }
             issueAndWeights.put(mapIssue.get(issue.getNumber()), calculatedWeight);
             index++;
         }
         // go over each issue and calculate the un-normalised weight
         for (Map.Entry<Integer, Double> entry : issueAndWeights.entrySet()) {
-            sumOfWeights = sumOfWeights + entry.getValue();
+            sumOfWeights += entry.getValue();
         }
         // calculate the sum of weights
         Double currentWeight;
@@ -216,7 +221,7 @@ public class OpponentModelling {
             optionRank = rankings.get(x);
             // get the ranking, i.e order options by their frequency
             V = (rankings.size() - (x + 1) + 1.00D) / rankings.size();
-            orderValues[mapIssue.get(issue.getNumber())][optionRank.getValue0()] = V;
+            opValues[mapIssue.get(issue.getNumber())][optionRank.getValue0()] = V;
             // calculates utility based on equation from paper
             // adds to the orderValues array
         }
