@@ -16,8 +16,9 @@ import java.util.*;
  */
 public class OpponentModelling {
 
-    public Map.Entry<Double, Bid> opponentBestEntry;
-    public Bid opponentLastBid;
+    public AbstractMap.SimpleEntry<Double, Bid> opponentBestEntry;
+    public ArrayList<AbstractMap.SimpleEntry<Double, Bid>> opponentBidHistory = new ArrayList<AbstractMap.SimpleEntry<Double, Bid>>();
+    public AbstractMap.SimpleEntry<Double, Bid> opponentLastBid;
     public Integer numberOfBids = 0;
     private AdditiveUtilitySpace utilitySpace;
     private Integer[][] frequency;
@@ -32,6 +33,7 @@ public class OpponentModelling {
     private HashMap<Integer, Issue> intToIssues = new HashMap<>();
 
 
+
     public OpponentModelling(AdditiveUtilitySpace utilitySpace) {
 
         this.utilitySpace = utilitySpace;
@@ -44,6 +46,22 @@ public class OpponentModelling {
 
     }
 
+    public void updateOpponentBids(Bid opponentLastBid){
+
+        Double utilityOfOpponentsBid = utilitySpace.getUtility(opponentLastBid);
+        // our utility of opponents bid
+        AbstractMap.SimpleEntry<Double,Bid> currentBid = new AbstractMap.SimpleEntry<Double, Bid>(utilityOfOpponentsBid,opponentLastBid);
+        this.opponentLastBid = currentBid;
+        this.opponentBidHistory.add(currentBid);
+        if (opponentBestEntry ==null){
+            this.opponentBestEntry  = currentBid;
+        }
+        else if(opponentBestEntry.getKey() < utilityOfOpponentsBid){
+            this.opponentBestEntry  = currentBid;
+        }
+
+
+    }
 
     public Double getOpponentUtility(Bid bid) {
 
@@ -59,7 +77,7 @@ public class OpponentModelling {
             utility = utility + currentWeight * optionValue;
 
         }
-        System.out.println(String.format("Current Opponent Utility is: %f",utility));
+        //System.out.println(String.format("Current Opponent Utility is: %f",utility));
         return utility;
         // loops through each issue in the bid
         // and the chosen options for each issue,
@@ -74,6 +92,8 @@ public class OpponentModelling {
         Integer issueIndex = indexes.getValue0();
         Integer optionIndex = indexes.getValue1();
         frequency[issueIndex][optionIndex] = frequency[issueIndex][optionIndex] + 1;
+
+        // add stuff here
 
         // increments the value a for the specific issue and its corresponding value
     }
@@ -229,9 +249,10 @@ public class OpponentModelling {
 
     }
 
-    public void updateOpponentModel() {
+    public void updateOpponentModel(Bid opponentsLastBid) {
         calculateValues();
         calculateWeights();
+        updateOpponentBids(opponentsLastBid);
         // when we get a new opponent bid calculate utilities and weights of issues
     }
 

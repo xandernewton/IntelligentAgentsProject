@@ -41,8 +41,14 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 	private TreeMap<Double, Bid> allBids = new TreeMap<Double, Bid>();
 	private LinkedList<Map.Entry<Double,Bid>> offerQueue = new LinkedList<Map.Entry<Double, Bid>>();
 	private Double lowestUtility = Double.POSITIVE_INFINITY;
+	private MovingAverage movingAverage = new MovingAverage(10);
 
 	private static int getRandomNumberInRange(int min, int max) {
+
+		if(min == max){
+			return min;
+		}
+
 		if (min >= max) {
 			throw new IllegalArgumentException("max must be greater than min");
 		}
@@ -56,7 +62,7 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 	@Override
 	public void init(NegotiationInfo info) {
 		super.init(info);
-		System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
+		//System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
 		if (hasPreferenceUncertainty()) {
 			System.out.println("Preference uncertainty is enabled.");
 		}
@@ -101,25 +107,45 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 		ArrayList<Map.Entry<Double,Bid>> sortingArray = new ArrayList<>();
 		Double opponentLastBidUtility;
 		Object actionTaken = null;
+		Double average = 0.0;
 		// calculate the current
 
+
+		/*if(opponentModel.opponentBidHistory.size() > 0) {
+			Double currentOpponentUtility = opponentModel.getOpponentUtility(opponentModel.opponentLastBid.getValue());
+			movingAverage.add(currentOpponentUtility);
+			average = movingAverage.getAverage();
+		}
+*/
+
+
+
 		if (firstRound) {
+			System.out.println("First round");
 			Map.Entry<Double, Bid> highestValuedBidEntry = allBids.lastEntry();
 			offerQueue.add(highestValuedBidEntry);
 			this.firstRound = false;
 			// on first round, offer our best bid
+			if(opponentModel.opponentLastBid == null){
+				replacementBidEntry = offerQueue.removeFirst();
+				actionTaken = new Offer(getPartyId(), replacementBidEntry.getValue());
+				mybidHistory.add(replacementBidEntry);
+
+			}
+
 		} else if (offerQueue.isEmpty()) {
 			TreeMap<Double, Bid> potentialBids = new TreeMap<Double, Bid>();
-			Map.Entry<Double, Bid> nextHighestBid =  allBids.lowerEntry(mybidHistory.get(mybidHistory.size() - 1).getKey());
+			Map.Entry<Double, Bid> nextHighestBid =  allBids.lowerEntry(this.mybidHistory.get(this.mybidHistory.size()-1).getKey());
 			Double lastBidUtil = (Double) nextHighestBid.getKey();
 			potentialBids.put(nextHighestBid.getKey(), nextHighestBid.getValue());
 			if (lastBidUtil < utilityThreshold) {
 				int bidIndex = getRandomNumberInRange(1, mybidHistory.size());
-				replacementBidEntry = mybidHistory.get(bidIndex);
+				replacementBidEntry = mybidHistory.get(bidIndex -1);
 				// Choose random previously made bid
 				potentialBids.remove(replacementBidEntry.getKey());
 				potentialBids.put(replacementBidEntry.getKey(), replacementBidEntry.getValue());
 				// remove the old bid and replace with the previously used bid
+
 			}
 
 			while(!difference){
@@ -135,43 +161,48 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 
 			}
 
-			if(potentialBids.size() < 4){
+			if(potentialBids.size() < 2){
 				offerQueue.addAll(potentialBids.entrySet());
 			}
-			// add bids to the offer queue
+
 			else{
 				sortingArray.addAll(potentialBids.entrySet());
 				sortingArray.sort((bid1, bid2) -> {
 					if (opponentModel.getOpponentUtility(bid1.getValue()) < opponentModel.getOpponentUtility(bid2.getValue()))
-						return -1;
-					if (opponentModel.getOpponentUtility(bid1.getValue()) > opponentModel.getOpponentUtility(bid2.getValue()))
 						return 1;
+					if (opponentModel.getOpponentUtility(bid1.getValue()) > opponentModel.getOpponentUtility(bid2.getValue()))
+						return -1;
 					return 0;
 				});
 				// sort the potential bids by the utility the opponent would get from the bid
-				for(int x= 0; x<4; x++){
+				for (int x = 0; x < sortingArray.size(); x++) {
+					Double y = opponentModel.getOpponentUtility(sortingArray.get(x).getValue());
 					offerQueue.add(sortingArray.get(x));
 				}
 				// add the top 4 bids to the offer queue
-				if(opponentModel.opponentBestEntry.getKey() > offerQueue.getFirst().getKey()) {
-					offerQueue.add(opponentModel.opponentBestEntry);
+				if (opponentModel.opponentBestEntry.getKey() > offerQueue.getFirst().getKey()) {
+					offerQueue.add(new AbstractMap.SimpleEntry<Double, Bid>(opponentModel.opponentBestEntry.getKey(),
+							opponentModel.opponentBestEntry.getValue()));
 				}
 			}
 
 		}
 
 		if (opponentModel.opponentLastBid != null) {
-			opponentLastBidUtility = this.utilitySpace.getUtility(opponentModel.opponentLastBid);
+			opponentLastBidUtility = opponentModel.opponentLastBid.getKey(); //this.utilitySpace.getUtility(opponentModel.opponentLastBid.getValue());
 			if (opponentLastBidUtility > lowestUtility ||
 					opponentLastBidUtility >= this.utilitySpace.getUtility(offerQueue.getFirst().getValue())) {
-				actionTaken =  new Accept(getPartyId(), opponentModel.opponentLastBid);
+				actionTaken =  new Accept(getPartyId(), opponentModel.opponentLastBid.getValue());
 				// If opponents last bid is greater than best bid on offer queue - accept
 				// If opponents last bid is greater than best lowest seen bid - accept
 			} else {
+				Double oppLastBidUtil = opponentModel.getOpponentUtility(opponentModel.opponentLastBid.getValue());
+				System.out.println(String.format("lowest utility is %f and opp  last bid util is %f opp last bid util %f",lowestUtility,opponentLastBidUtility,oppLastBidUtil));
 				Map.Entry<Double, Bid> removedBid = offerQueue.remove(0);
 				mybidHistory.add(removedBid);
 				if (removedBid.getKey() < lowestUtility) {
 					lowestUtility = removedBid.getKey();
+					//System.out.println(String.format("lowest utility is %f ",lowestUtility));
 					// update lowest bid
 				}
 				actionTaken = new Offer(getPartyId(), removedBid.getValue());
@@ -197,7 +228,7 @@ public class MyAgent_2 extends AbstractNegotiationParty {
 				opponentModel.updateFrequency(issue, (ValueDiscrete) value);
 
 			}
-			opponentModel.updateOpponentModel();
+			opponentModel.updateOpponentModel(lastOffer);
 			opponentModel.getOpponentUtility(lastOffer);
 
 

@@ -125,7 +125,7 @@ class BidGenerator {
 
     public Double CalculateUtilityToOffer(){
 
-        Double currentTime = timeLine.getCurrentTime();
+        Double currentTime = timeLine.getTime();
         Double conecessionLimit = concessionFunction(currentTime);
         Double currentUtility = 0.0;
         currentUtility = minUtility + (1.00D- conecessionLimit) * (maxUtility - minUtility);

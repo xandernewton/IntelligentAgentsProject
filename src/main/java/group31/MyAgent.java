@@ -110,7 +110,7 @@ public class MyAgent extends AbstractNegotiationParty {
 		return OfferToSend;
 	}
 
-	/**
+	/**-
 	 * Remembers the offers received by the opponent.
 	 */
 	@Override
@@ -123,9 +123,8 @@ public class MyAgent extends AbstractNegotiationParty {
 			for(Issue issue : issues){
 				Value value = lastOffer.getValue(issue);
 				opponentModel.updateFrequency(issue, (ValueDiscrete) value);
-
 			}
-			opponentModel.updateOpponentModel();
+			opponentModel.updateOpponentModel(lastOffer);
 			opponentModel.getOpponentUtility(lastOffer);
 
 

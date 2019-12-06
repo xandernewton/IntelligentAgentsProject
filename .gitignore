@@ -55,3 +55,7 @@ partyrepository.xml
 protocolrepository.xml
 
 /python/
+
+DataObjects/
+
+negotiation.xml
