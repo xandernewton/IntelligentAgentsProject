@@ -1,4 +1,4 @@
-package main.java.group31;
+package group31;
 
 import com.google.common.collect.Sets;
 import genius.core.Bid;
@@ -12,6 +12,9 @@ import genius.core.utility.AdditiveUtilitySpace;
 import org.javatuples.Pair;
 
 
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.*;
 
 class BidGenerator {
@@ -24,7 +27,7 @@ class BidGenerator {
     private Domain domain;
     private Timeline timeLine;
     private Double initialConcession = 0.05D; // this needs testing for the optimal value
-    private Double minUtility = 0.58D; // from the paper
+    public Double minUtility = 0.58D; // from the paper
     private Double maxUtility;
     private Double discountFactor = 1.00D;
     private Double concessionRateCoefficient = 0.02D;
@@ -54,8 +57,8 @@ class BidGenerator {
     }
 
     private void computeAllPossibleBids(){
-
-
+        //System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
+        System.out.println("Starting to generate all bids");
         // A list containing sets of values for each issue
         List<Issue> issues = this.utilitySpace.getDomain().getIssues();
         for(Issue issue: issues){
@@ -78,7 +81,7 @@ class BidGenerator {
             this.allPossibleBids.put(utilityOfBid, bidToAddToTree);
         }
 
-
+        System.out.println("Done");
     }
 
     private Bid covertToBid(List<Pair<Integer,ValueDiscrete>> values){

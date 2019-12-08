@@ -1,4 +1,4 @@
-package main.java.group31;
+package group31;
 
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
@@ -21,8 +21,9 @@ import genius.core.timeline.Timeline;
 import genius.core.uncertainty.BidRanking;
 import genius.core.utility.AbstractUtilitySpace;
 import genius.core.utility.AdditiveUtilitySpace;
+import group31.oldVersions.OpponentModelling_JB;
 import org.chocosolver.solver.Model;
-import main.java.group31.OpponentModelling;
+
 
 /**
  * A simple example agent that makes random bids above a minimum target utility.
@@ -35,7 +36,7 @@ public class MyAgent extends AbstractNegotiationParty {
 	private AdditiveUtilitySpace estimatedUtilitySpace;
 	private Timeline timeLine = (Timeline) getTimeLine();
 	private BidGenerator bidGenerator;
-	private OpponentModelling opponentModel;
+	private OpponentModelling_JB opponentModel;
 	private Double discountFactor;
 	private Integer round;
 	private ArrayList<Map.Entry<Double, Bid>> mybidHistory = new ArrayList<Map.Entry<Double, Bid>>();
@@ -84,7 +85,7 @@ public class MyAgent extends AbstractNegotiationParty {
 		this.allBids = bidGenerator.getAllPossibleBids();
 		// get all the possible bids in the domain
 
-		this.opponentModel = new OpponentModelling(estimatedUtilitySpace);
+		this.opponentModel = new OpponentModelling_JB(estimatedUtilitySpace);
 
 	}
 

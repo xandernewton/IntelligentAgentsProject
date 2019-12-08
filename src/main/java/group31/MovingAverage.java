@@ -1,11 +1,15 @@
-package main.java.group31;
-
+package group31;
 public class MovingAverage {
 
         private int size;
         private double total = 0d;
         private int index = 0;
-        private double samples[];
+
+    public double[] getSamples() {
+        return samples;
+    }
+
+    private double samples[];
 
         public MovingAverage(int size) {
             this.size = size;
