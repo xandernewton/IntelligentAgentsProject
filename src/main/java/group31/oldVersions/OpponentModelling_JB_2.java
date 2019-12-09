@@ -14,7 +14,7 @@ import java.util.*;
 /**
  * The type Opponent modelling jb.
  */
-public class OpponentModelling_JB {
+public class OpponentModelling_JB_2 {
 
     public AbstractMap.SimpleEntry<Double, Bid> opponentBestEntry;
     public ArrayList<AbstractMap.SimpleEntry<Double, Bid>> opponentBidHistory = new ArrayList<AbstractMap.SimpleEntry<Double, Bid>>();
@@ -31,10 +31,11 @@ public class OpponentModelling_JB {
     private HashMap<Integer, Double> issueAndWeights = new HashMap<>();
     // An array of Pairs, item 0 contains the issue id, item 1 contains the weight
     private HashMap<Integer, Issue> intToIssues = new HashMap<>();
+    private Double epsilon = 0.02;
 
 
 
-    public OpponentModelling_JB(AdditiveUtilitySpace utilitySpace) {
+    public OpponentModelling_JB_2(AdditiveUtilitySpace utilitySpace) {
 
         this.utilitySpace = utilitySpace;
         issues = utilitySpace.getDomain().getIssues();
@@ -92,7 +93,37 @@ public class OpponentModelling_JB {
         Integer issueIndex = indexes.getValue0();
         Integer optionIndex = indexes.getValue1();
         frequency[issueIndex][optionIndex] = frequency[issueIndex][optionIndex] + 1;
+
         // increments the value a for the specific issue and its corresponding value
+    }
+
+    public void updateWeights(Bid currentBid){
+
+        if(opponentLastBid == null){
+            return;
+        }
+
+        Issue currentIssue;
+        HashMap<Integer, Value> aValues = currentBid.getValues();
+        HashMap<Integer, Value> bValues = opponentLastBid.getValue().getValues();
+        Double currentWeight =0.0;
+
+        for(int x=0; x< aValues.size(); x++){
+            if(aValues.get(x) != bValues.get(x)){
+                currentIssue = intToIssues.get(x);
+                try {
+                    currentWeight = issueAndWeights.get(mapIssue.get(currentIssue.getNumber()));
+                }catch (Exception e){
+                    System.out.println("hi");
+                }
+                currentWeight = currentWeight + epsilon;
+                issueAndWeights.put(mapIssue.get(currentIssue.getNumber()),currentWeight);
+
+            }
+        }
+
+
+
     }
 
 
@@ -117,6 +148,7 @@ public class OpponentModelling_JB {
         // the frequency of each option in each value
         orderValues = new Double[issues.size()][];
         // the utility of each option for in each issue
+
 
         for (Issue issue : issues) {
 
@@ -149,21 +181,23 @@ public class OpponentModelling_JB {
             }
         }
 
+        int index = 0;
+        for (Issue issue : issues) {
+            issueAndWeights.put(mapIssue.get(issue.getNumber()), 0.0D);
+            index++;
+        }
+
 
     }
+
 
     private void calculateWeights() {
         numberOfBids++;
         // increment the number of bids we have seen
         Double sumOfWeights = 0.0D;
         Double calculatedWeight;
-        int index = 0;
-        for (Issue issue : issues) {
-            calculatedWeight = calculateWeightForIssue(issue);
-            issueAndWeights.put(mapIssue.get(issue.getNumber()), calculatedWeight);
-            index++;
-        }
-        // go over each issue and calculate the un-normalised weight
+
+        // go over each issue and calculate the un-normalised weight*/
         for (Map.Entry<Integer, Double> entry : issueAndWeights.entrySet()) {
             sumOfWeights = sumOfWeights + entry.getValue();
         }
@@ -171,6 +205,9 @@ public class OpponentModelling_JB {
         Double currentWeight;
         for (Issue issue : issues) {
             currentWeight = issueAndWeights.get(mapIssue.get(issue.getNumber()));
+            if(currentWeight == 0.0){
+                continue;
+            }
             currentWeight = currentWeight / sumOfWeights;
             issueAndWeights.put(mapIssue.get(issue.getNumber()), currentWeight);
         }
@@ -188,7 +225,7 @@ public class OpponentModelling_JB {
         int numberOfOptions = frequency[issueIndex].length;
         double totalWeight = 0;
         for (int x = 0; x < numberOfOptions; x++) {
-            totalWeight = totalWeight + (Math.pow(frequency[issueIndex][x], 2.00D) / Math.pow(numberOfBids,2));
+            totalWeight = totalWeight + (Math.pow(frequency[issueIndex][x], 2.00D) / numberOfBids);
             // calculate the weight according the equation in JB paper
         }
 
@@ -245,12 +282,30 @@ public class OpponentModelling_JB {
 
     }
 
+    private void normaliseFrequency(){
+
+        Double totalWeights = 0.0;
+
+        for(int x=0; x < frequency.length; x++){
+            for(int y = 0; y < frequency[x].length; y ++){
+                totalWeights = totalWeights + frequency[x][y];
+            }
+            for(int z = 0; z < frequency[x].length; z ++){
+                orderValues[x][z] =  Double.valueOf(frequency[x][z])/totalWeights;
+            }
+        }
+
+    }
+
 
     public void updateOpponentModel(Bid opponentsLastBid) {
         calculateValues();
         calculateWeights();
+        //normaliseFrequency();
         updateOpponentBids(opponentsLastBid);
         // when we get a new opponent bid calculate utilities and weights of issues
     }
+
+
 
 }

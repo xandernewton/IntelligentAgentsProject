@@ -16,6 +16,8 @@ import genius.core.uncertainty.BidRanking;
 import genius.core.utility.AbstractUtilitySpace;
 import genius.core.utility.AdditiveUtilitySpace;
 import group31.oldVersions.OpponentModelling_JB;
+import group31.oldVersions.OpponentModelling_JB_2;
+import group31.oldVersions.OpponentModelling_JB_test;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.chocosolver.solver.Model;
 import java.io.FileDescriptor;
@@ -36,6 +38,8 @@ public class Agent31 extends AbstractNegotiationParty {
 	private Timeline timeLine = (Timeline) getTimeLine();
 	private BidGenerator bidGenerator;
 	private OpponentModelling_JB opponentModel;
+	//private OpponentModelling_JB_2 opponentModel;
+	//private OpponentModelling_JB_test opponentModel;
 	private Double discountFactor;
 	private Integer round = 0;
 	private ArrayList<Map.Entry<Double, Bid>> mybidHistory = new ArrayList<Map.Entry<Double, Bid>>();
@@ -94,6 +98,8 @@ public class Agent31 extends AbstractNegotiationParty {
 		// get all the possible bids in the domain
 
 		opponentModel = new OpponentModelling_JB(estimatedUtilitySpace);
+		//opponentModel = new OpponentModelling_JB_test(estimatedUtilitySpace);
+		//opponentModel = new OpponentModelling_JB_2(estimatedUtilitySpace);
 		//ignore this line, its for testing
 
 	}
@@ -112,7 +118,7 @@ public class Agent31 extends AbstractNegotiationParty {
 		ArrayList<Map.Entry<Double, Bid>> sortingArray = new ArrayList<>();
 		Double opponentLastBidUtility;
 		Object actionTaken = null;
-		Integer modNumber = 20;
+		Integer modNumber = 30;
 		Double average = 0.0;
 		Double stantardDeviation = 0.0;
 		Double errorPenalty = 0.1;
@@ -149,14 +155,14 @@ public class Agent31 extends AbstractNegotiationParty {
 				StandardDeviation sd = new StandardDeviation(false);
 				stantardDeviation = sd.evaluate(movingAverage.getSamples());
 				Double OutlierValue = average - 2 * stantardDeviation;
-				Double opponentError =  ((double) allBids.size() / 25000) * errorPenalty;
+				//Double opponentError =  ((double) allBids.size() / 25000) * errorPenalty;
 				System.out.println(String.format("average is %f and outlier value is %f opponents utility is %f", average, OutlierValue, opponentLastBidUtility));
 
-				if(timeLine.getTime() > 0.98 && opponentLastBidUtility - opponentError <= average - 3.5 * stantardDeviation && this.utilitySpace.getUtility(opponentModel.opponentLastBid.getValue()) + errorPenalty >= bidGenerator.minUtility){
-					return new Accept(getPartyId(), opponentModel.opponentLastBid.getValue());
-				}
+				//if(timeLine.getTime() > 0.99 && opponentLastBidUtility <= average - 3.5 * stantardDeviation && this.utilitySpace.getUtility(opponentModel.opponentLastBid.getValue()) + errorPenalty >= bidGenerator.minUtility){
+				//	return new Accept(getPartyId(), opponentModel.opponentLastBid.getValue());
+				//}
 
-				if (opponentLastBidUtility -opponentError <= average - 2 * stantardDeviation && this.utilitySpace.getUtility(opponentModel.opponentLastBid.getValue()) >= bidGenerator.minUtility) {
+				if (opponentLastBidUtility   <= average - 2 * stantardDeviation && this.utilitySpace.getUtility(opponentModel.opponentLastBid.getValue()) >= bidGenerator.minUtility) {
 					return new Accept(getPartyId(), opponentModel.opponentLastBid.getValue());
 				}
 			}
@@ -231,7 +237,7 @@ public class Agent31 extends AbstractNegotiationParty {
 
 		if (opponentModel.opponentLastBid != null) {
 			opponentLastBidUtility = opponentModel.opponentLastBid.getKey(); //this.utilitySpace.getUtility(opponentModel.opponentLastBid.getValue());
-			if (opponentLastBidUtility > lowestUtility -0.2 || // 0.21
+			if (opponentLastBidUtility > lowestUtility -0.1 ||
 					opponentLastBidUtility >= this.utilitySpace.getUtility(offerQueue.getFirst().getValue())) {
 				actionTaken = new Accept(getPartyId(), opponentModel.opponentLastBid.getValue());
 
@@ -269,6 +275,7 @@ public class Agent31 extends AbstractNegotiationParty {
 				opponentModel.updateFrequency(issue, (ValueDiscrete) value);
 
 			}
+			//opponentModel.updateWeights(lastOffer)
 			opponentModel.updateOpponentModel(lastOffer);
 			opponentModel.getOpponentUtility(lastOffer);
 

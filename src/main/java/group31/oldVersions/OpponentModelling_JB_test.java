@@ -14,7 +14,7 @@ import java.util.*;
 /**
  * The type Opponent modelling jb.
  */
-public class OpponentModelling_JB {
+public class OpponentModelling_JB_test {
 
     public AbstractMap.SimpleEntry<Double, Bid> opponentBestEntry;
     public ArrayList<AbstractMap.SimpleEntry<Double, Bid>> opponentBidHistory = new ArrayList<AbstractMap.SimpleEntry<Double, Bid>>();
@@ -34,7 +34,7 @@ public class OpponentModelling_JB {
 
 
 
-    public OpponentModelling_JB(AdditiveUtilitySpace utilitySpace) {
+    public OpponentModelling_JB_test(AdditiveUtilitySpace utilitySpace) {
 
         this.utilitySpace = utilitySpace;
         issues = utilitySpace.getDomain().getIssues();
@@ -135,7 +135,7 @@ public class OpponentModelling_JB {
 
             // Initialise all entries in the list to zero
 
-            Arrays.fill(frequency[mapIssue.get(issue.getNumber())], 0);
+            Arrays.fill(frequency[mapIssue.get(issue.getNumber())], 1);
             Arrays.fill(orderValues[mapIssue.get(issue.getNumber())], 0.0D);
             // fill with zeros
 
@@ -187,10 +187,18 @@ public class OpponentModelling_JB {
         Integer issueIndex = mapIssue.get(issue.getNumber());
         int numberOfOptions = frequency[issueIndex].length;
         double totalWeight = 0;
+        double mean=0.0;
         for (int x = 0; x < numberOfOptions; x++) {
-            totalWeight = totalWeight + (Math.pow(frequency[issueIndex][x], 2.00D) / Math.pow(numberOfBids,2));
+            mean = mean + frequency[issueIndex][x];
+        }
+        mean = mean / numberOfOptions;
+
+        for (int x = 0; x < numberOfOptions; x++) {
+            totalWeight = totalWeight + (frequency[issueIndex][x]/mean)*Math.log(frequency[issueIndex][x]/mean);
+            //totalWeight = totalWeight + (Math.pow(frequency[issueIndex][x], 2.00D) / Math.pow(numberOfBids,2));
             // calculate the weight according the equation in JB paper
         }
+        totalWeight = totalWeight/numberOfOptions;
 
         return totalWeight;
     }
