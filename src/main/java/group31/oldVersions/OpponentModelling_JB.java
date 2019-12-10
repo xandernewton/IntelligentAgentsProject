@@ -48,15 +48,15 @@ public class OpponentModelling_JB {
 
     public void updateOpponentBids(Bid opponentLastBid){
 
-        Double utilityOfOpponentsBid = utilitySpace.getUtility(opponentLastBid);
+        Double myutilityOfOpponentsBid = utilitySpace.getUtility(opponentLastBid);
         // our utility of opponents bid
-        AbstractMap.SimpleEntry<Double,Bid> currentBid = new AbstractMap.SimpleEntry<Double, Bid>(utilityOfOpponentsBid,opponentLastBid);
+        AbstractMap.SimpleEntry<Double,Bid> currentBid = new AbstractMap.SimpleEntry<Double, Bid>(myutilityOfOpponentsBid,opponentLastBid);
         this.opponentLastBid = currentBid;
         this.opponentBidHistory.add(currentBid);
         if (opponentBestEntry ==null){
             this.opponentBestEntry  = currentBid;
         }
-        else if(opponentBestEntry.getKey() < utilityOfOpponentsBid){
+        else if(opponentBestEntry.getKey() < myutilityOfOpponentsBid){
             this.opponentBestEntry  = currentBid;
         }
 
@@ -188,7 +188,7 @@ public class OpponentModelling_JB {
         int numberOfOptions = frequency[issueIndex].length;
         double totalWeight = 0;
         for (int x = 0; x < numberOfOptions; x++) {
-            totalWeight = totalWeight + (Math.pow(frequency[issueIndex][x], 2.00D) / Math.pow(numberOfBids,2));
+            totalWeight = totalWeight + (Math.pow(frequency[issueIndex][x], 2.00D) / Math.pow(numberOfBids, 2.00));
             // calculate the weight according the equation in JB paper
         }
 

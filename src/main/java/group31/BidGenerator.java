@@ -30,7 +30,7 @@ class BidGenerator {
     public Double minUtility = 0.58D; // from the paper
     private Double maxUtility;
     private Double discountFactor = 1.00D;
-    private Double concessionRateCoefficient = 0.15D;
+    private Double concessionRateCoefficient = 0.02D;
 
     public TreeMap<Double, Bid> getAllPossibleBids() {
         return allPossibleBids;

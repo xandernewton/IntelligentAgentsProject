@@ -37,9 +37,9 @@ public class Agent31 extends AbstractNegotiationParty {
 	private AdditiveUtilitySpace estimatedUtilitySpace;
 	private Timeline timeLine = (Timeline) getTimeLine();
 	private BidGenerator bidGenerator;
-	private OpponentModelling_JB opponentModel;
+	//private OpponentModelling_JB opponentModel;
 	//private OpponentModelling_JB_2 opponentModel;
-	//private OpponentModelling_JB_test opponentModel;
+	private OpponentModelling_JB_test opponentModel;
 	private Double discountFactor;
 	private Integer round = 0;
 	private ArrayList<Map.Entry<Double, Bid>> mybidHistory = new ArrayList<Map.Entry<Double, Bid>>();
@@ -97,8 +97,8 @@ public class Agent31 extends AbstractNegotiationParty {
 		this.allBids = bidGenerator.getAllPossibleBids();
 		// get all the possible bids in the domain
 
-		opponentModel = new OpponentModelling_JB(estimatedUtilitySpace);
-		//opponentModel = new OpponentModelling_JB_test(estimatedUtilitySpace);
+		//opponentModel = new OpponentModelling_JB(estimatedUtilitySpace);
+		opponentModel = new OpponentModelling_JB_test(estimatedUtilitySpace);
 		//opponentModel = new OpponentModelling_JB_2(estimatedUtilitySpace);
 		//ignore this line, its for testing
 
@@ -118,10 +118,11 @@ public class Agent31 extends AbstractNegotiationParty {
 		ArrayList<Map.Entry<Double, Bid>> sortingArray = new ArrayList<>();
 		Double opponentLastBidUtility;
 		Object actionTaken = null;
-		Integer modNumber = 30;
+		Integer modNumber = 25;
 		Double average = 0.0;
 		Double stantardDeviation = 0.0;
 		Double errorPenalty = 0.1;
+
 
 
 
@@ -155,12 +156,12 @@ public class Agent31 extends AbstractNegotiationParty {
 				StandardDeviation sd = new StandardDeviation(false);
 				stantardDeviation = sd.evaluate(movingAverage.getSamples());
 				Double OutlierValue = average - 2 * stantardDeviation;
-				//Double opponentError =  ((double) allBids.size() / 25000) * errorPenalty;
+				Double opponentError =  ((double) allBids.size() / 25000) * errorPenalty;
 				System.out.println(String.format("average is %f and outlier value is %f opponents utility is %f", average, OutlierValue, opponentLastBidUtility));
 
-				//if(timeLine.getTime() > 0.99 && opponentLastBidUtility <= average - 3.5 * stantardDeviation && this.utilitySpace.getUtility(opponentModel.opponentLastBid.getValue()) + errorPenalty >= bidGenerator.minUtility){
-				//	return new Accept(getPartyId(), opponentModel.opponentLastBid.getValue());
-				//}
+				/*if(timeLine.getTime() > 0.99 && opponentLastBidUtility - opponentError <= average - 3.5 * stantardDeviation && this.utilitySpace.getUtility(opponentModel.opponentLastBid.getValue()) + errorPenalty >= bidGenerator.minUtility){
+					return new Accept(getPartyId(), opponentModel.opponentLastBid.getValue());
+				}*/
 
 				if (opponentLastBidUtility   <= average - 2 * stantardDeviation && this.utilitySpace.getUtility(opponentModel.opponentLastBid.getValue()) >= bidGenerator.minUtility) {
 					return new Accept(getPartyId(), opponentModel.opponentLastBid.getValue());
@@ -182,7 +183,9 @@ public class Agent31 extends AbstractNegotiationParty {
 
 			}
 
-		} else if (offerQueue.isEmpty()) {
+		}
+
+		else if (offerQueue.isEmpty()) {
 			TreeMap<Double, Bid> potentialBids = new TreeMap<Double, Bid>();
 			Map.Entry<Double, Bid> nextHighestBid = allBids.lowerEntry(this.mybidHistory.get(this.mybidHistory.size() - 1).getKey());
 			Double lastBidUtil = (Double) nextHighestBid.getKey();
@@ -210,9 +213,9 @@ public class Agent31 extends AbstractNegotiationParty {
 
 			}
 
-			if (potentialBids.size() < 2) {
+		/*	if (potentialBids.size() < 2) {
 				offerQueue.addAll(potentialBids.entrySet());
-			} else {
+			} else {*/
 				sortingArray.addAll(potentialBids.entrySet());
 				sortingArray.sort((bid1, bid2) -> {
 					if (opponentModel.getOpponentUtility(bid1.getValue()) < opponentModel.getOpponentUtility(bid2.getValue()))
@@ -230,14 +233,15 @@ public class Agent31 extends AbstractNegotiationParty {
 				if (opponentModel.opponentBestEntry.getKey() > offerQueue.getFirst().getKey()) {
 					offerQueue.add(new AbstractMap.SimpleEntry<Double, Bid>(opponentModel.opponentBestEntry.getKey(),
 							opponentModel.opponentBestEntry.getValue()));
-				}
+			//	}
 			}
 
 		}
 
 		if (opponentModel.opponentLastBid != null) {
+			//System.out.println(String.format("My utility of last bid is %f", utilitySpace.getUtility(opponentModel.opponentLastBid.getValue())));
 			opponentLastBidUtility = opponentModel.opponentLastBid.getKey(); //this.utilitySpace.getUtility(opponentModel.opponentLastBid.getValue());
-			if (opponentLastBidUtility > lowestUtility -0.1 ||
+			if (opponentLastBidUtility > lowestUtility -0.2 ||
 					opponentLastBidUtility >= this.utilitySpace.getUtility(offerQueue.getFirst().getValue())) {
 				actionTaken = new Accept(getPartyId(), opponentModel.opponentLastBid.getValue());
 
@@ -245,7 +249,7 @@ public class Agent31 extends AbstractNegotiationParty {
 				// If opponents last bid is greater than best lowest seen bid - accept
 			} else {
 				Double oppLastBidUtil = opponentModel.getOpponentUtility(opponentModel.opponentLastBid.getValue());
-				//System.out.println(String.format("lowest utility is %f and my last bid util is %f opp last bid util %f",lowestUtility,opponentLastBidUtility,oppLastBidUtil));
+				System.out.println(String.format("lowest utility is %f and my last bid util is %f opp last bid util %f",lowestUtility,opponentLastBidUtility,oppLastBidUtil));
 				Map.Entry<Double, Bid> removedBid = offerQueue.remove(0);
 				mybidHistory.add(removedBid);
 				if (removedBid.getKey() < lowestUtility) {
