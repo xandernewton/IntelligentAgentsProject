@@ -58,7 +58,7 @@ class BidGenerator {
 
     private void computeAllPossibleBids(){
         //System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
-        System.out.println("Starting to generate all bids");
+        //System.out.println("Starting to generate all bids");
         // A list containing sets of values for each issue
         List<Issue> issues = this.utilitySpace.getDomain().getIssues();
         for(Issue issue: issues){
@@ -81,7 +81,7 @@ class BidGenerator {
             this.allPossibleBids.put(utilityOfBid, bidToAddToTree);
         }
 
-        System.out.println("Done");
+        //System.out.println("Done");
     }
 
     private Bid covertToBid(List<Pair<Integer,ValueDiscrete>> values){
