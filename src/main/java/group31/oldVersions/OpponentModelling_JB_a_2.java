@@ -1,4 +1,4 @@
-package group31;
+package group31.oldVersions;
 
 import genius.core.Bid;
 import genius.core.issue.Issue;
@@ -7,6 +7,7 @@ import genius.core.issue.Value;
 import genius.core.issue.ValueDiscrete;
 import genius.core.utility.AdditiveUtilitySpace;
 import org.javatuples.Pair;
+import java.lang.Math;
 
 import java.util.*;
 
@@ -14,13 +15,20 @@ import java.util.*;
 /**
  * The type Opponent modelling jb.
  */
-public class OpponentModelling {
+public class OpponentModelling_JB_a_2 {
 
-    //public Double epsilon = 0.01;
+    public Double epsilon = 0.2;
     public AbstractMap.SimpleEntry<Double, Bid> opponentBestEntry;
     public ArrayList<AbstractMap.SimpleEntry<Double, Bid>> opponentBidHistory = new ArrayList<AbstractMap.SimpleEntry<Double, Bid>>();
-    public AbstractMap.SimpleEntry<Double, Bid> opponentLastBid;
+    public AbstractMap.SimpleEntry<Double, Bid> opponentLastBid;//contains the utility and the bid
     public Integer numberOfBids = 0;
+    public Integer getNumberOfBids() {
+        return numberOfBids;
+    }
+    public AbstractMap.SimpleEntry<Double, Bid> getOpponentLastBid() {
+        return opponentLastBid;
+    }
+
     private AdditiveUtilitySpace utilitySpace;
     private Integer[][] frequency;
     private Double[][] opValues;
@@ -35,7 +43,7 @@ public class OpponentModelling {
 
 
 
-    public OpponentModelling(AdditiveUtilitySpace utilitySpace) {
+    public OpponentModelling_JB_a_2(AdditiveUtilitySpace utilitySpace) {
 
         this.utilitySpace = utilitySpace;
         issues = utilitySpace.getDomain().getIssues();
@@ -54,7 +62,7 @@ public class OpponentModelling {
         AbstractMap.SimpleEntry<Double,Bid> currentBid = new AbstractMap.SimpleEntry<Double, Bid>(utilityOfOpponentsBid,opponentLastBid);
         this.opponentLastBid = currentBid;
         this.opponentBidHistory.add(currentBid);
-        if (opponentBestEntry ==null){
+        if (opponentBestEntry == null){
             this.opponentBestEntry  = currentBid;
         }
         else if(opponentBestEntry.getKey() < utilityOfOpponentsBid){
@@ -87,19 +95,55 @@ public class OpponentModelling {
     }
 
 
-    public void updateFrequency(Issue issue, ValueDiscrete valueDiscrete, double Time) {
-        Double epsilon = 0.2;
+    public void updateFrequency(Issue issue, ValueDiscrete valueDiscrete) {
         Pair<Integer, Integer> indexes = getIndex(issue, valueDiscrete);
         Integer issueIndex = indexes.getValue0();
         Integer optionIndex = indexes.getValue1();
         frequency[issueIndex][optionIndex] = frequency[issueIndex][optionIndex] + 1;
-        opValues[issueIndex][optionIndex] = opValues[issueIndex][optionIndex] + epsilon;
-        double total = 0.0;
-        for (int i = 0; i < opValues[issueIndex].length ; i++) {
-            total+= opValues[issueIndex][i];
-        }
-        opValues[issueIndex][optionIndex] = opValues[issueIndex][optionIndex]/total;
         // increments the value a for the specific issue and its corresponding value
+    }
+
+    public void updateIssue(Issue issue, ValueDiscrete valueDiscrete, double Time) {
+        epsilon = 0.2;
+        Pair<Integer, Integer> indexes = getIndex(issue, valueDiscrete);
+        Integer issueIndex = indexes.getValue0();
+        Integer optionIndex = indexes.getValue1();
+
+        boolean isnull = false;
+        try {
+            Bid b = opponentBidHistory.get(opponentBidHistory.size()-1).getValue();
+        }
+        catch (NullPointerException e){
+            System.out.println("your move first");
+            isnull=true;
+        }
+        catch (Exception e){
+            isnull=true;
+        }
+        if (!isnull) {
+            Bid bb = opponentBidHistory.get(opponentBidHistory.size()-1).getValue();
+
+            if (valueDiscrete==bb.getValue(issue)){
+                issueAndWeights.replace(issueIndex, (issueAndWeights.get(issueIndex) + epsilon));
+                Normalise();
+            }
+
+            // increments the value a for the specific issue and its corresponding value
+        }
+    }
+
+    public void Normalise(){
+        double total = 0.0;
+        //gettotal
+
+        for (int j = 0; j < issueAndWeights.size(); j++) {//for each issue
+            total += issueAndWeights.get(j);//add the total
+        }
+        for (int j = 0; j < issueAndWeights.size(); j++) {//for each issue
+            issueAndWeights.replace(j, (issueAndWeights.get(j)/total));//add the total
+            System.out.print(intToIssues.get(j+1) + ": "+ issueAndWeights.get(j)+ "|  ");
+        }
+        System.out.print("\n");
     }
 
 
@@ -139,9 +183,7 @@ public class OpponentModelling {
             frequency[mapIssue.get(issue.getNumber())] = new Integer[issueDiscrete.getValues().size()];
             opValues[mapIssue.get(issue.getNumber())] = new Double[issueDiscrete.getValues().size()];
             // add new arrays in the nested array
-
             // Initialise all entries in the list to zero
-
             Arrays.fill(frequency[mapIssue.get(issue.getNumber())], 0);
             Arrays.fill(opValues[mapIssue.get(issue.getNumber())], 0.0D);
             // fill with zeros
@@ -173,7 +215,7 @@ public class OpponentModelling {
         }
         // go over each issue and calculate the un-normalised weight
         for (Map.Entry<Integer, Double> entry : issueAndWeights.entrySet()) {
-            sumOfWeights = sumOfWeights + entry.getValue();
+            sumOfWeights += entry.getValue();
         }
         // calculate the sum of weights
         Double currentWeight;

@@ -1,4 +1,4 @@
-package group31;
+package group31.oldVersions;
 
 import genius.core.Bid;
 import genius.core.issue.Issue;
@@ -7,6 +7,7 @@ import genius.core.issue.Value;
 import genius.core.issue.ValueDiscrete;
 import genius.core.utility.AdditiveUtilitySpace;
 import org.javatuples.Pair;
+import java.lang.Math;
 
 import java.util.*;
 
@@ -14,9 +15,9 @@ import java.util.*;
 /**
  * The type Opponent modelling jb.
  */
-public class OpponentModelling {
+public class OpponentModelling_JB_a {
 
-    //public Double epsilon = 0.01;
+    public Double epsilon = 0.01;
     public AbstractMap.SimpleEntry<Double, Bid> opponentBestEntry;
     public ArrayList<AbstractMap.SimpleEntry<Double, Bid>> opponentBidHistory = new ArrayList<AbstractMap.SimpleEntry<Double, Bid>>();
     public AbstractMap.SimpleEntry<Double, Bid> opponentLastBid;
@@ -35,7 +36,7 @@ public class OpponentModelling {
 
 
 
-    public OpponentModelling(AdditiveUtilitySpace utilitySpace) {
+    public OpponentModelling_JB_a(AdditiveUtilitySpace utilitySpace) {
 
         this.utilitySpace = utilitySpace;
         issues = utilitySpace.getDomain().getIssues();
@@ -87,19 +88,55 @@ public class OpponentModelling {
     }
 
 
-    public void updateFrequency(Issue issue, ValueDiscrete valueDiscrete, double Time) {
-        Double epsilon = 0.2;
+    public void updateFrequency(Issue issue, ValueDiscrete valueDiscrete) {
         Pair<Integer, Integer> indexes = getIndex(issue, valueDiscrete);
         Integer issueIndex = indexes.getValue0();
         Integer optionIndex = indexes.getValue1();
         frequency[issueIndex][optionIndex] = frequency[issueIndex][optionIndex] + 1;
-        opValues[issueIndex][optionIndex] = opValues[issueIndex][optionIndex] + epsilon;
-        double total = 0.0;
-        for (int i = 0; i < opValues[issueIndex].length ; i++) {
-            total+= opValues[issueIndex][i];
-        }
-        opValues[issueIndex][optionIndex] = opValues[issueIndex][optionIndex]/total;
         // increments the value a for the specific issue and its corresponding value
+    }
+
+    public void updateIssue(Issue issue, ValueDiscrete valueDiscrete, double Time) {
+        epsilon = 0.2;
+        Pair<Integer, Integer> indexes = getIndex(issue, valueDiscrete);
+        Integer issueIndex = indexes.getValue0();
+        Integer optionIndex = indexes.getValue1();
+        boolean isnull = false;
+        try {
+            isnull = (opValues[issueIndex][optionIndex]==null);
+        }
+        catch (NullPointerException e){
+            //System.out.println("your move first");
+            isnull=true;
+        }
+        if (!isnull) {
+            opValues[issueIndex][optionIndex] = opValues[issueIndex][optionIndex] + epsilon;
+            double total = 0.0;
+            for (int i = 0; i < opValues[issueIndex].length ; i++) {
+                total+= opValues[issueIndex][i];
+            }
+            opValues[issueIndex][optionIndex] = opValues[issueIndex][optionIndex]/total;
+            // increments the value a for the specific issue and its corresponding value
+        }
+    }
+
+    public void Normalise(){
+        double[] total = new double[opValues.length];
+        //gettotal
+        for (int j = 0; j < opValues.length; j++) {//for each issue
+            total[j]=0.0;
+            for (int i = 0; i < opValues[j].length; i++) { //for each option
+                total[j] += opValues[j][i];//add the total
+            }
+
+        }
+        for (int j = 0; j < opValues.length; j++) {//for each issue
+            total[j]=0.0;
+            for (int i = 0; i < opValues[j].length; i++) { //for each option
+                opValues[j][i]= opValues[j][i]/total[j];//add the total
+            }
+
+        }
     }
 
 
@@ -139,10 +176,8 @@ public class OpponentModelling {
             frequency[mapIssue.get(issue.getNumber())] = new Integer[issueDiscrete.getValues().size()];
             opValues[mapIssue.get(issue.getNumber())] = new Double[issueDiscrete.getValues().size()];
             // add new arrays in the nested array
-
             // Initialise all entries in the list to zero
-
-            Arrays.fill(frequency[mapIssue.get(issue.getNumber())], 0);
+            Arrays.fill(frequency[mapIssue.get(issue.getNumber())], 1);
             Arrays.fill(opValues[mapIssue.get(issue.getNumber())], 0.0D);
             // fill with zeros
 
@@ -173,7 +208,7 @@ public class OpponentModelling {
         }
         // go over each issue and calculate the un-normalised weight
         for (Map.Entry<Integer, Double> entry : issueAndWeights.entrySet()) {
-            sumOfWeights = sumOfWeights + entry.getValue();
+            sumOfWeights += entry.getValue();
         }
         // calculate the sum of weights
         Double currentWeight;
@@ -195,8 +230,14 @@ public class OpponentModelling {
         Integer issueIndex = mapIssue.get(issue.getNumber());
         int numberOfOptions = frequency[issueIndex].length;
         double totalWeight = 0;
+        double mean=0.0;
         for (int x = 0; x < numberOfOptions; x++) {
-            totalWeight = totalWeight + (Math.pow(frequency[issueIndex][x], 2.00D) / numberOfBids);
+            mean = mean + frequency[issueIndex][x];
+        }
+        mean = mean / numberOfOptions;
+        for (int x = 0; x < numberOfOptions; x++) {
+            totalWeight = totalWeight + (frequency[issueIndex][x]/mean)*Math.log(frequency[issueIndex][x]/mean);
+            //totalWeight = totalWeight + (Math.pow(frequency[issueIndex][x], 2.00D) / numberOfBids);
             // calculate the weight according the equation in JB paper
         }
 
