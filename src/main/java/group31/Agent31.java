@@ -13,8 +13,10 @@ import genius.core.parties.AbstractNegotiationParty;
 import genius.core.parties.NegotiationInfo;
 import genius.core.timeline.Timeline;
 import genius.core.uncertainty.BidRanking;
+import genius.core.uncertainty.ExperimentalUserModel;
 import genius.core.utility.AbstractUtilitySpace;
 import genius.core.utility.AdditiveUtilitySpace;
+import genius.core.utility.UncertainAdditiveUtilitySpace;
 import group31.oldVersions.*;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.chocosolver.solver.Model;
@@ -37,9 +39,9 @@ public class Agent31 extends AbstractNegotiationParty {
 	private BidGenerator bidGenerator;
 	//private OpponentModelling_JB opponentModel;
 	//private OpponentModelling_JB_2 opponentModel;
-	private OpponentModelling_JB_a opponentModel;
+	//private OpponentModelling_JB_a opponentModel;
 	//private OpponentModelling_JB_a_2 opponentModel;
-	//private OpponentModelling_JB_test opponentModel;
+	private OpponentModelling_JB_test opponentModel;
 	private PreferenceElicititation preferenceElicititation;
 	private Double discountFactor;
 	private Integer round = 0;
@@ -52,6 +54,8 @@ public class Agent31 extends AbstractNegotiationParty {
 	private ArrayList<Double> movingAverages = new ArrayList<>();
 	private Boolean detected = false;
 	private boolean isBoulware = false;
+	private List<Double> UtilityList = new ArrayList<>();
+	private UncertainAdditiveUtilitySpace realUSpace;
 
 	private static int getRandomNumberInRange(int min, int max) {
 
@@ -88,15 +92,17 @@ public class Agent31 extends AbstractNegotiationParty {
 		firstRound = true;
 		// Setup essential variables
 
-		if (bidRanking.getSize() <= 500){
-			preferenceElicititation = new PreferenceElicititation(userModel,info);
-			estimatedUtilitySpace = (AdditiveUtilitySpace) preferenceElicititation.generateNewEstimate();
-		}
-		else{
-			estimatedUtilitySpace = (AdditiveUtilitySpace) estimateUtilitySpace();
-
-		}
-
+//		if (bidRanking.getSize() <= 500){
+//			preferenceElicititation = new PreferenceElicititation(userModel,info);
+//			estimatedUtilitySpace = (AdditiveUtilitySpace) preferenceElicititation.generateNewEstimate();
+//		}
+//		else{
+//			estimatedUtilitySpace = (AdditiveUtilitySpace) estimateUtilitySpace();
+//
+//		}
+		estimatedUtilitySpace = (AdditiveUtilitySpace) estimateUtilitySpace();
+		ExperimentalUserModel e = ( ExperimentalUserModel ) userModel ;
+		realUSpace = e. getRealUtilitySpace();
 		// Get estimated utility space until Kai has finished his code
 
 
@@ -105,9 +111,9 @@ public class Agent31 extends AbstractNegotiationParty {
 		// get all the possible bids in the domain
 
 		//opponentModel = new OpponentModelling_JB(estimatedUtilitySpace);
-		//opponentModel = new OpponentModelling_JB_test(estimatedUtilitySpace);
+		opponentModel = new OpponentModelling_JB_test(estimatedUtilitySpace);
 		//opponentModel = new OpponentModelling_JB_2(estimatedUtilitySpace);
-		opponentModel = new OpponentModelling_JB_a(estimatedUtilitySpace);
+		//opponentModel = new OpponentModelling_JB_a(estimatedUtilitySpace);
 		//opponentModel = new OpponentModelling_JB_a_2(estimatedUtilitySpace);
 		//ignore this line, its for testing
 
@@ -160,13 +166,16 @@ public class Agent31 extends AbstractNegotiationParty {
 		}
 
 
-		if (timeLine.getTime() > 0.95) {
+		if (timeLine.getTime() > 0.7) {
 			opponentLastBidUtility = opponentModel.getOpponentUtility(opponentModel.opponentLastBid.getValue());
 			average = movingAverage.getAverage();
 			StandardDeviation sd = new StandardDeviation(false);
 			stantardDeviation = sd.evaluate(movingAverage.getSamples());
 			Double OutlierValue = average - 2 * stantardDeviation;
-			//System.out.println(String.format("average is %f and outlier value is %f opponents utility is %f", average, OutlierValue, opponentLastBidUtility));
+			opponentLastBidUtility = opponentModel.getOpponentUtility(opponentModel.opponentLastBid.getValue());
+			//Double realUtil = realUSpace.getUtility(opponentModel.opponentLastBid.getValue());
+			System.out.println(String.format("%f", opponentLastBidUtility));
+			//System.out.println(String.format("average is %f and outlier value is %f opponents utility is %f", average, OutlierValue, opponentLastBidUtility))
 			if (isBoulware) {
 
 				/*if(timeLine.getTime() > 0.99 && opponentLastBidUtility - opponentError <= average - 3.5 * stantardDeviation && this.utilitySpace.getUtility(opponentModel.opponentLastBid.getValue()) + errorPenalty >= bidGenerator.minUtility){
@@ -288,6 +297,10 @@ public class Agent31 extends AbstractNegotiationParty {
 		if (action instanceof Offer) {
 			List<Issue> issues;
 			lastOffer = ((Offer) action).getBid();
+			if(opponentModel.opponentLastBid != null) {
+				this.UtilityList.add(opponentModel.getOpponentUtility(lastOffer));
+			}
+
 			issues = lastOffer.getIssues();
 			for (Issue issue : issues) {
 				Value value = lastOffer.getValue(issue);
